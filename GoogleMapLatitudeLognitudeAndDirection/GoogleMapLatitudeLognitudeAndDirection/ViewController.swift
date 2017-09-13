@@ -9,19 +9,19 @@
 import UIKit
 
 class ViewController: UIViewController {
-//------------ Outlet's ---------------
+    //------------ Outlet's ---------------
     @IBOutlet weak var mapTableView: UITableView!
-//------------ Variable's ------------
+    //------------ Variable's ------------
     var startLocationLatitude = [Any]()
     var startLocationLognitude = [Any]()
     var stopLocationLatitude = [Any]()
     var stopLocationLognitude = [Any]()
     var dirction = [String]()
-//    ---------------------------------
+    //    ---------------------------------
     override func viewDidLoad() {
         super.viewDidLoad()
-        callApi()
-        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(5), execute: {
+        callApi()   //---------- Call method for get data from api -----------
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(5), execute: {    //-------- Deley for 5 second ----------
             //-------- Register nib ---------
             let cellNib = UINib(nibName: "CellForMapData", bundle: nil)
             self.mapTableView.register(cellNib, forCellReuseIdentifier: "CellForMapDataId")
@@ -29,10 +29,10 @@ class ViewController: UIViewController {
             self.mapTableView.dataSource = self
             self.mapTableView.delegate = self
         })
-
+        
         
     }
-//--------------- Function for call data from API -----------
+    //--------------- Function for call data from API -----------
     func callApi() {
         let headers = [
             "content-type": "application/x-www-form-urlencoded",
@@ -58,30 +58,27 @@ class ViewController: UIViewController {
                 //                print(httpResponse!)
                 //
             }
-            let json = try! JSONSerialization.jsonObject(with: data!, options: JSONSerialization.ReadingOptions.init(rawValue: 0))
+            let json = try! JSONSerialization.jsonObject(with: data!, options: JSONSerialization.ReadingOptions.init(rawValue: 0)) //-- Parsing data.......
             
-            guard let dataDict = json as? [String:Any] else {fatalError(" json is empty")}
-            guard let routesData = dataDict["routes"] as? [[String:Any]] else{fatalError("Route data not found")}
-            //            print(routesData)
-            guard let legsData = routesData[0]["legs"] as? [[String:Any]] else{fatalError("Route data not found")}
-            
-            guard let startLocation = legsData[0]["start_location"] as? [String:Any] else{fatalError("Route data not found")}
-            guard let stopLocation = legsData[0]["end_location"] as? [String:Any] else{fatalError("Route data not found")}
-            guard let startAdd = legsData[0]["start_address"] as? String else{fatalError("Route data not found")}
+            guard let dataDict = json as? [String:Any] else {fatalError(" json is empty")}  // ------- Assigning to dictionary........
+            guard let routesData = dataDict["routes"] as? [[String:Any]] else{fatalError("Route data not found")} //-- Get Routes data....
+            guard let legsData = routesData[0]["legs"] as? [[String:Any]] else{fatalError("Route data not found")}  //--- get leg's data.....
+            guard let startLocation = legsData[0]["start_location"] as? [String:Any] else{fatalError("Route data not found")} //-- start location..
+            guard let stopLocation = legsData[0]["end_location"] as? [String:Any] else{fatalError("Route data not found")} //-- end location..
+            guard let startAdd = legsData[0]["start_address"] as? String else{fatalError("Route data not found")} //--
             self.dirction.append(startAdd)
-            
+//---------------- get StartLocation and EndLocation lat or  long  and append in array --------------
             guard let startLocLat = startLocation["lat"] else{fatalError("Route data not found")}
             guard let startLocLong = startLocation["lng"] else{fatalError("Route data not found")}
             guard let stopLocLat = stopLocation["lat"] else{fatalError("Route data not found")}
             self.stopLocationLatitude.append(stopLocLat)
-            
             guard let stopLocLong = stopLocation["lng"] else{fatalError("Route data not found")}
             self.stopLocationLognitude.append(stopLocLong)
             
             //--------------------- At leg's start location latitude and lognitude ............
             self.startLocationLatitude.append(startLocLat)
             self.startLocationLognitude.append(startLocLong)
-            //
+            //-------------------------------------------------
             //            self.stopLocationLognitude.append(stopLocLong)
             ////--------------------- For step's Latitude and lognitude .................
             guard let stepData = legsData[0]["steps"] as? [[String:Any]] else{fatalError("Route data not found")}
@@ -98,15 +95,11 @@ class ViewController: UIViewController {
                 self.stopLocationLatitude.append(endLocLat)
                 guard let endLocLong = stepEndLatiLonEndLoc["lat"] else{fatalError("Route data not found")}
                 self.stopLocationLognitude.append(endLocLong)
-                
-                
-            }
-            print(self.startLocationLatitude)
-            print(self.startLocationLognitude)
-            print(self.stopLocationLatitude)
-            print(self.stopLocationLognitude)
-            
-//            self.mapTableView.reloadData()
+                }
+//            print(self.startLocationLatitude)
+//            print(self.startLocationLognitude)
+//            print(self.stopLocationLatitude)
+//            print(self.stopLocationLognitude)
         })
         
         dataTask.resume()
@@ -116,6 +109,7 @@ class ViewController: UIViewController {
 //    ===================== ViewController extension =============================
 
 extension ViewController: UITableViewDataSource,UITableViewDelegate{
+    //--------------- TableView Method's ------------------------
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return startLocationLatitude.count
     }
@@ -125,17 +119,17 @@ extension ViewController: UITableViewDataSource,UITableViewDelegate{
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-      guard  let cell = tableView.dequeueReusableCell(withIdentifier: "CellForMapDataId", for: indexPath) as? CellForMapData else{fatalError("In side cell")}
+        guard  let cell = tableView.dequeueReusableCell(withIdentifier: "CellForMapDataId", for: indexPath) as? CellForMapData else{fatalError("In side cell")}
         cell.startLatitude.text = String(describing: self.startLocationLatitude[indexPath.row])
         cell.startLognitude.text = String(describing: self.startLocationLognitude[indexPath.row])
-         cell.stopLatitude.text = String(describing: self.stopLocationLatitude[indexPath.row])
-         cell.stopLongnitude.text = String(describing: self.stopLocationLognitude[indexPath.row])
+        cell.stopLatitude.text = String(describing: self.stopLocationLatitude[indexPath.row])
+        cell.stopLongnitude.text = String(describing: self.stopLocationLognitude[indexPath.row])
         return cell
     }
     
     
 }
-   
+
 
 
 
